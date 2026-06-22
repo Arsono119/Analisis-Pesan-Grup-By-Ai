@@ -78,28 +78,22 @@ async function startBot() {
 
     sock.ev.on('messages.upsert', async (m) => {
         for (const msg of m.messages) {
-            if (msg.message?.protocolMessage) {
-                console.log('📝 PROTOCOL MSG:', msg.message.protocolMessage.type, JSON.stringify(msg.key));
+            const proto = msg.message?.protocolMessage;
+            if (proto?.type === 0 && proto.editedMessage) {
+                console.log('✏️ EDIT via protocolMessage');
+                prosesPesan({ key: msg.key, message: proto.editedMessage });
+                return;
             }
         }
         prosesPesan(m.messages[0]);
     });
 
     sock.ev.on('messages.update', async (updates) => {
-        console.log('✏️ MESSAGES.UPDATE:', JSON.stringify(updates.length), 'updates');
         for (const { key, update } of updates) {
-            console.log('  KEY:', JSON.stringify(key), 'UPDATE KEYS:', Object.keys(update));
-            let msg = update.message || update.msg;
-            if (!msg) {
-                console.log('  → SKIP: no message');
-                continue;
-            }
-            if (msg.editedMessage?.message) {
-                console.log('  → UNWRAP editedMessage');
-                msg = msg.editedMessage.message;
-            }
-            console.log('  → TEXT:', JSON.stringify(msg.conversation || msg.extendedTextMessage?.text || '(none)'));
-            prosesPesan({ key, message: msg });
+            const wrapper = update.message || update.msg;
+            if (!wrapper) continue;
+            const inner = wrapper.editedMessage?.message || wrapper;
+            prosesPesan({ key, message: inner });
         }
     });
 }
