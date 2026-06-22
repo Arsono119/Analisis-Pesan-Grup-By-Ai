@@ -1,6 +1,5 @@
 const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
 const pino = require('pino');
-const qrcode = require('qrcode-terminal');
 const config = require('./config');
 const { analisisPesan, cekDuplikat } = require('./fitur/analyzer');
 
@@ -15,13 +14,23 @@ async function startBot() {
 
     sock.ev.on('creds.update', saveCreds);
 
-    sock.ev.on('connection.update', ({ connection, lastDisconnect, qr }) => {
+    sock.ev.on('connection.update', async ({ connection, lastDisconnect, qr }) => {
         if (qr) {
+            if (!config.nomorHP) {
+                console.log('\n⚠️  Isi nomorHP di config.js untuk pairing code.');
+                return;
+            }
             console.log('\n═══════════════════════════════════════════');
-            console.log('  SCAN QR CODE INI DENGAN WHATSAPP KAMU');
+            console.log('  KODE PAIRING WHATSAPP');
             console.log('  Buka WhatsApp > Titik 3 > Linked Devices');
             console.log('═══════════════════════════════════════════\n');
-            qrcode.generate(qr, { small: true });
+            try {
+                let code = await sock.requestPairingCode(config.nomorHP);
+                code = code.match(/.{1,4}/g).join('-');
+                console.log(`  Kode: ${code}`);
+            } catch (err) {
+                console.log(`  Gagal: ${err.message}`);
+            }
         }
         if (connection === 'close') {
             const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
@@ -29,7 +38,7 @@ async function startBot() {
                 console.log('\n⚠️  Koneksi terputus, reconnect...');
                 startBot();
             } else {
-                console.log('\n❌ Logout dari WhatsApp, scan QR lagi.');
+                console.log('\n❌ Logout dari WhatsApp, jalankan ulang bot.');
             }
         } else if (connection === 'open') {
             console.log(config.pesanAktif);
