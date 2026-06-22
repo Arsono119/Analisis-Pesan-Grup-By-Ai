@@ -77,16 +77,28 @@ async function startBot() {
     }
 
     sock.ev.on('messages.upsert', async (m) => {
+        for (const msg of m.messages) {
+            if (msg.message?.protocolMessage) {
+                console.log('📝 PROTOCOL MSG:', msg.message.protocolMessage.type, JSON.stringify(msg.key));
+            }
+        }
         prosesPesan(m.messages[0]);
     });
 
     sock.ev.on('messages.update', async (updates) => {
+        console.log('✏️ MESSAGES.UPDATE:', JSON.stringify(updates.length), 'updates');
         for (const { key, update } of updates) {
+            console.log('  KEY:', JSON.stringify(key), 'UPDATE KEYS:', Object.keys(update));
             let msg = update.message || update.msg;
-            if (!msg) continue;
+            if (!msg) {
+                console.log('  → SKIP: no message');
+                continue;
+            }
             if (msg.editedMessage?.message) {
+                console.log('  → UNWRAP editedMessage');
                 msg = msg.editedMessage.message;
             }
+            console.log('  → TEXT:', JSON.stringify(msg.conversation || msg.extendedTextMessage?.text || '(none)'));
             prosesPesan({ key, message: msg });
         }
     });
