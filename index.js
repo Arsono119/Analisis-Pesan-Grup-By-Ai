@@ -62,9 +62,8 @@ async function startBot() {
             for (const { keyword, targets } of cocok) {
                 for (const target of targets) {
                     if (cekDuplikat(id, keyword, target, teks)) continue;
-                    const pesanSingkat = teks.length > 80 ? teks.slice(0, 80) + '...' : teks;
                     await sock.sendMessage(target, {
-                        text: `🔴 ${keyword}\n👤 @${pengirim.split('@')[0]}\n💬 ${pesanSingkat}`,
+                        text: `🔴 ${keyword}\n👤 @${pengirim.split('@')[0]}\n💬 ${teks}`,
                         mentions: [pengirim]
                     });
                 }
