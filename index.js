@@ -45,8 +45,7 @@ async function startBot() {
         }
     });
 
-    sock.ev.on('messages.upsert', async (m) => {
-        const msg = m.messages[0];
+    function prosesPesan(msg) {
         if (!msg.message || msg.key.fromMe) return;
 
         const teks = msg.message.conversation ||
@@ -62,7 +61,7 @@ async function startBot() {
             for (const { keyword, targets } of cocok) {
                 for (const target of targets) {
                     if (cekDuplikat(id, keyword, target, teks)) continue;
-                    await sock.sendMessage(target, {
+                    sock.sendMessage(target, {
                         text: `🔴 ${keyword}\n👤 @${pengirim.split('@')[0]}\n💬 ${teks}`,
                         mentions: [pengirim]
                     });
@@ -74,6 +73,17 @@ async function startBot() {
             if (cmd === 'ping') {
                 return sock.sendMessage(id, { text: '🏓 Pong! Bot aktif.' });
             }
+        }
+    }
+
+    sock.ev.on('messages.upsert', async (m) => {
+        prosesPesan(m.messages[0]);
+    });
+
+    sock.ev.on('messages.update', async (updates) => {
+        for (const { key, update } of updates) {
+            if (!update.message) continue;
+            prosesPesan({ key, message: update.message });
         }
     });
 }
