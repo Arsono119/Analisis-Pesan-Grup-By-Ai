@@ -76,14 +76,30 @@ async function startBot() {
         }
     }
 
+    function extractEdit(msg) {
+        const proto = msg.message?.protocolMessage;
+        if (!proto || proto.type !== 0) return null;
+        return {
+            key: msg.key,
+            message: proto.editedMessage
+        };
+    }
+
     sock.ev.on('messages.upsert', async (m) => {
-        prosesPesan(m.messages[0]);
+        const msg = m.messages[0];
+        const edit = extractEdit(msg);
+        if (edit) {
+            prosesPesan(edit);
+            return;
+        }
+        prosesPesan(msg);
     });
 
     sock.ev.on('messages.update', async (updates) => {
         for (const { key, update } of updates) {
-            if (!update.message) continue;
-            prosesPesan({ key, message: update.message });
+            const msg = update.message || update.msg;
+            if (!msg) continue;
+            prosesPesan({ key, message: msg });
         }
     });
 }
