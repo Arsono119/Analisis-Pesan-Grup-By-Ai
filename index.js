@@ -2,7 +2,6 @@ const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = requi
 const pino = require('pino');
 const qrcode = require('qrcode-terminal');
 const config = require('./config');
-const { tanyaAI, resetChat } = require('./fitur/ai');
 const { analisisPesan, cekDuplikat } = require('./fitur/analyzer');
 
 async function startBot() {
@@ -65,16 +64,8 @@ async function startBot() {
             const cmd = teks.trim().toLowerCase();
 
             if (cmd === 'ping') {
-                return sock.sendMessage(id, { text: 'ðŸ“ Pong! Bot aktif.' });
+                return sock.sendMessage(id, { text: '🏓 Pong! Bot aktif.' });
             }
-
-            if (cmd === '!reset') {
-                resetChat(id);
-                return sock.sendMessage(id, { text: 'ðŸ”„ Riwayat chat direset!' });
-            }
-
-            const balasan = await tanyaAI(id, teks);
-            await sock.sendMessage(id, { text: balasan });
         }
     });
 }
