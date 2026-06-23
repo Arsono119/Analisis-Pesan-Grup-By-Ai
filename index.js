@@ -46,15 +46,22 @@ async function startBot() {
     });
 
     function prosesPesan(msg) {
-        if (!msg.message || msg.key.fromMe) return;
+        if (!msg.message || msg.key.fromMe) {
+            console.log('⏭️ SKIP: msg.message=', !!msg.message, 'fromMe=', msg.key?.fromMe);
+            return;
+        }
 
         const teks = msg.message.conversation ||
                      msg.message.extendedTextMessage?.text ||
                      msg.message.imageMessage?.caption || "";
-        if (!teks) return;
+        if (!teks) {
+            console.log('⏭️ SKIP: teks kosong, msg keys:', Object.keys(msg.message));
+            return;
+        }
 
         const id = msg.key.remoteJid;
         const pengirim = msg.key.participant || id;
+        console.log('📨 PROSES:', { id, pengirim, teks: teks.slice(0, 50) });
 
         if (id.endsWith('@g.us')) {
             const cocok = analisisPesan(teks);
@@ -80,6 +87,7 @@ async function startBot() {
         for (const msg of m.messages) {
             const proto = msg.message?.protocolMessage;
             if (proto?.type === 14 && proto.editedMessage) {
+                console.log('✏️ EDIT via upsert protocolMessage', JSON.stringify(proto.editedMessage).slice(0, 200));
                 prosesPesan({ key: msg.key, message: proto.editedMessage });
                 continue;
             }
@@ -91,7 +99,11 @@ async function startBot() {
         for (const { key, update } of updates) {
             const message = update.message || update.msg;
             if (!message) continue;
-            prosesPesan({ key, message: message.editedMessage?.message || message });
+            const inner = message.editedMessage?.message || message;
+            if (message.editedMessage?.message) {
+                console.log('✏️ EDIT via messages.update', JSON.stringify(inner).slice(0, 200));
+            }
+            prosesPesan({ key, message: inner });
         }
     });
 }
