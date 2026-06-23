@@ -80,20 +80,18 @@ async function startBot() {
         for (const msg of m.messages) {
             const proto = msg.message?.protocolMessage;
             if (proto?.type === 0 && proto.editedMessage) {
-                console.log('✏️ EDIT via protocolMessage');
                 prosesPesan({ key: msg.key, message: proto.editedMessage });
-                return;
+                continue;
             }
+            prosesPesan(msg);
         }
-        prosesPesan(m.messages[0]);
     });
 
     sock.ev.on('messages.update', async (updates) => {
         for (const { key, update } of updates) {
-            const wrapper = update.message || update.msg;
-            if (!wrapper) continue;
-            const inner = wrapper.editedMessage?.message || wrapper;
-            prosesPesan({ key, message: inner });
+            const message = update.message || update.msg;
+            if (!message) continue;
+            prosesPesan({ key, message });
         }
     });
 }
