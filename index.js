@@ -79,7 +79,7 @@ async function startBot() {
     sock.ev.on('messages.upsert', async (m) => {
         for (const msg of m.messages) {
             const proto = msg.message?.protocolMessage;
-            if (proto?.type === 0 && proto.editedMessage) {
+            if (proto?.type === 14 && proto.editedMessage) {
                 prosesPesan({ key: msg.key, message: proto.editedMessage });
                 continue;
             }
@@ -91,7 +91,7 @@ async function startBot() {
         for (const { key, update } of updates) {
             const message = update.message || update.msg;
             if (!message) continue;
-            prosesPesan({ key, message });
+            prosesPesan({ key, message: message.editedMessage?.message || message });
         }
     });
 }
