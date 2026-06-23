@@ -1,4 +1,4 @@
-const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
+const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, normalizeMessageContent } = require('@whiskeysockets/baileys');
 const pino = require('pino');
 const config = require('./config');
 const { analisisPesan, cekDuplikat } = require('./fitur/analyzer');
@@ -85,9 +85,10 @@ async function startBot() {
 
     sock.ev.on('messages.upsert', async (m) => {
         for (const msg of m.messages) {
+            console.log('📩 UPSERT msg keys:', Object.keys(msg), 'message keys:', Object.keys(msg.message || {}), 'type:', msg.message?.protocolMessage?.type);
             const proto = msg.message?.protocolMessage;
             if (proto?.type === 14 && proto.editedMessage) {
-                console.log('✏️ EDIT via upsert protocolMessage', JSON.stringify(proto.editedMessage).slice(0, 200));
+                console.log('✏️ EDIT via upsert');
                 prosesPesan({ key: msg.key, message: proto.editedMessage });
                 continue;
             }
@@ -97,11 +98,12 @@ async function startBot() {
 
     sock.ev.on('messages.update', async (updates) => {
         for (const { key, update } of updates) {
+            console.log('🔄 UPDATE key:', key.id?.slice(0, 15), 'update keys:', Object.keys(update), 'has editedMessage:', !!update.message?.editedMessage);
             const message = update.message || update.msg;
             if (!message) continue;
             const inner = message.editedMessage?.message || message;
             if (message.editedMessage?.message) {
-                console.log('✏️ EDIT via messages.update', JSON.stringify(inner).slice(0, 200));
+                console.log('✏️ EDIT via update, inner keys:', Object.keys(inner));
             }
             prosesPesan({ key, message: inner });
         }
