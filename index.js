@@ -85,12 +85,15 @@ async function startBot() {
 
     sock.ev.on('messages.upsert', async (m) => {
         for (const msg of m.messages) {
-            console.log('📩 UPSERT msg keys:', Object.keys(msg), 'message keys:', Object.keys(msg.message || {}), 'type:', msg.message?.protocolMessage?.type);
-            const proto = msg.message?.protocolMessage;
-            if (proto?.type === 14 && proto.editedMessage) {
-                console.log('✏️ EDIT via upsert');
-                prosesPesan({ key: msg.key, message: proto.editedMessage });
-                continue;
+            const normalized = normalizeMessageContent(msg.message);
+            console.log('📩 UPSERT msg keys:', Object.keys(msg), 'norm keys:', Object.keys(normalized || {}), 'type:', normalized?.protocolMessage?.type);
+            if (normalized?.protocolMessage?.type === 14) {
+                const newContent = normalized.protocolMessage.editedMessage;
+                if (newContent) {
+                    console.log('✏️ EDIT via upsert (normalized)');
+                    prosesPesan({ key: msg.key, message: newContent });
+                    continue;
+                }
             }
             prosesPesan(msg);
         }
@@ -98,14 +101,17 @@ async function startBot() {
 
     sock.ev.on('messages.update', async (updates) => {
         for (const { key, update } of updates) {
-            console.log('🔄 UPDATE key:', key.id?.slice(0, 15), 'update keys:', Object.keys(update), 'has editedMessage:', !!update.message?.editedMessage);
-            const message = update.message || update.msg;
-            if (!message) continue;
-            const inner = message.editedMessage?.message || message;
-            if (message.editedMessage?.message) {
-                console.log('✏️ EDIT via update, inner keys:', Object.keys(inner));
+            console.log('🔄 UPDATE key:', key.id?.slice(0, 15), 'update keys:', Object.keys(update));
+            if (update.message) {
+                console.log('   update.message keys:', Object.keys(update.message));
+                const inner = update.message.editedMessage?.message || update.message;
+                if (update.message.editedMessage) {
+                    console.log('   📝 EDIT DETECTED, inner keys:', Object.keys(inner));
+                }
+                prosesPesan({ key, message: inner });
+            } else if (update.msg) {
+                console.log('   update.msg keys:', Object.keys(update.msg));
             }
-            prosesPesan({ key, message: inner });
         }
     });
 }
