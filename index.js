@@ -1,5 +1,6 @@
 const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, normalizeMessageContent } = require('@whiskeysockets/baileys');
 const pino = require('pino');
+const qrcodeTerminal = require('qrcode-terminal');
 const config = require('./config');
 const { analisisPesan, cekDuplikat } = require('./fitur/analyzer');
 
@@ -16,6 +17,8 @@ async function startBot() {
 
     sock.ev.on('connection.update', async ({ connection, lastDisconnect, qr }) => {
         if (qr) {
+            console.log('\n📷 Scan QR berikut dengan WhatsApp (Linked Devices):');
+            qrcodeTerminal.generate(qr, { small: true });
             if (!config.nomorHP) {
                 console.log('\n⚠️  Isi nomorHP di config.js untuk pairing code.');
                 return;

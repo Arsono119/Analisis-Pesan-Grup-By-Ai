@@ -5,3 +5,5 @@ creds.json
 *.json
 data/
 .env
+qr.png
+*.log
