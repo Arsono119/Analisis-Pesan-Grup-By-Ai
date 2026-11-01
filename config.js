@@ -1,6 +1,6 @@
 module.exports = {
     sesiLogin: 'sesi_login',
-    nomorHP: '6287788580682',
+    nomorHP: '6285196467038',
     pesanAktif: '\n🎉 BOT ANALISIS GRUP AKTIF!',
 
     keywords: {
